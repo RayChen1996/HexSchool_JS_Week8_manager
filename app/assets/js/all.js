@@ -1,24 +1,35 @@
 
 $(function(){
   GetProductList()
-  ShowMyCart()
+  // ShowMyCart()
 })
+
+const api_path = 'raychen'
+const token = "zjRahQTiUTdZHg18y4XB5gv1Ort2"
 
 let PData = []
 let CartArr = []
+
 function GetProductList(){
-  //https://livejs-api.hexschool.io/api/livejs/v1/customer/getproductlist/carts
-  const url = `https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/products`
-  // console.log(`GetProductList  ${api_path}`)
+  console.log(`api_path  ${api_path}`)
+  //https://livejs-api.hexschool.io/api/livejs/v1/admin/raychen/orders
+  let url = `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`
+  url = "https://livejs-api.hexschool.io/api/livejs/v1/admin/raychen/orders"
+  console.log(`GetProductList  ${url}`)
  
-  axios.get(url)
+  axios.get(url,{
+    headers: {
+      'Authorization': token
+    }
+  })
   .then(function (response) {
     // 成功會回傳的內容
     // console.log(response);
     let data = response.data
+    console.log(data);
     PData = data.products
     if(data.status)
-       RenderProductData(data.products)
+       RenderProductData(data.orders)
   })
   .catch(function (error) {
     // 失敗會回傳的內容
@@ -28,71 +39,16 @@ function GetProductList(){
 
 
 }
-
-
-
-
-
-function ShowMyCart(){
-  // https://livejs-api.hexschool.io/api/livejs/v1/customer/raychen/carts
-  const url = `https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/carts`
-  axios.get(url)
-  .then(function (response) {
-    // 成功會回傳的內容
-    console.log('我的購物車');
-    console.log(response);
-    ReRenderMyCart(response.data)
-
-  
-  })
-  .catch(function (error) {
-    // 失敗會回傳的內容
-    console.log(error);
-  })  
-}
-
-function AddMyCart(PId){
-  console.log(`PId  ${PId}`)
-  axios.post(`https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/carts`, {
-    //帶入的值會使用物件包裝
-    "data": {
-      "productId": PId,
-      "quantity": 1
-    }
-  })
-  .then(function (response) {
-    // 成功會回傳的內容
-    let data = response.data
-    CartArr = data.carts
-    if(data.status){
-      ReRenderMyCart(data)
-    }
-  })
-  .catch(function (error) {
-    // 失敗會回傳的內容
-    console.log(error);
-  });
-}
+ 
+ 
 
 //更新我的購物車列表
 function ReRenderMyCart(PDArr){
   const CartTbl = document.querySelector('.shoppingCart-table')
-  //表頭
-  const myCartHTML_TH= `
-      <tr>
-        <th width="40%">品項</th>
-        <th width="15%">單價</th>
-        <th width="15%">數量</th>
-        <th width="15%">金額</th>
-        <th width="15%"></th>
-      </tr>
-
-  `
-  
+ 
   let myCartHTML = ``
-  let TotalPrice = PDArr.finalTotal
   if(PDArr.carts.length==0){
-    myCartHTML += ShowEmptyTbl();
+
   }else{
     PDArr.carts.forEach((pItemObj,pIdx)=>{
       
@@ -117,36 +73,20 @@ function ReRenderMyCart(PDArr){
       
     })    
   }
-
-  
-  //表尾
-  const myCartHTML_Tfoot= `
-    <tr>
-      <td>
-          <a href="#javascript:;" onclick='DelAllCart();' class="discardAllBtn">刪除所有品項</a>
-      </td>
-      <td colspan="2"></td>
-
-      <td>
-          <p>總金額</p>
-      </td>
-      <td>NT$${TotalPrice}</td>
-    </tr>
-
-  `
-  CartTbl.innerHTML = myCartHTML_TH + myCartHTML + myCartHTML_Tfoot
+  CartTbl.innerHTML =  myCartHTML 
 }
 
 
 // 刪除購物車內特定產品
 function DelSingleCart(pid){
-  //'https://livejs-api.hexschool.io/api/livejs/v1/customer/raychen/carts/jw1jNknjVsKYPNyqYSWA'
+  //'https://livejs-api.hexschool.io/api/livejs/v1/admin/raychen/carts/jw1jNknjVsKYPNyqYSWA'
   // console.log(`delete at  ${pid}`)
-  //https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/carts/jw1jNknjVsKYPNyqYSWA
-  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/carts/${pid}`).
+  //https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/carts/jw1jNknjVsKYPNyqYSWA
+  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/carts/${pid}`).
     then(function (response) {
       console.log(response.data);
-      ReRenderMyCart(response.data);
+   
+      ReRenderMyCart(response.data.orders)
   })
 
 
@@ -154,21 +94,20 @@ function DelSingleCart(pid){
 
 //清除購物車內全部產品
 function DelAllCart(){
-  //https://livejs-api.hexschool.io/api/livejs/v1/customer/raychen/carts
-  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/carts`).
+  //https://livejs-api.hexschool.io/api/livejs/v1/admin/raychen/carts
+  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/carts`).
     then(function (response) {
       console.log(response.data);
       //重新渲染一次List  carts
-
-      ReRenderMyCart(response.data.carts);
+     
+      ReRenderMyCart(response.data.orders)
   })
 
 }
 
-function AddPresertData(){
-  // console.log($("#tradeWay").val())
-  //https://livejs-api.hexschool.io/api/livejs/v1/customer/raychen/orders
-  axios.post(`https://livejs-api.hexschool.io/api/livejs/v1/customer/${api_path}/orders`, {
+function UpdateOrdersData(){
+  //https://livejs-api.hexschool.io/api/livejs/v1/admin/raychen/orders
+  axios.post(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`, {
     //帶入的值會使用物件包裝
     "data": {
       "user": {
@@ -184,6 +123,7 @@ function AddPresertData(){
     // 成功會回傳的內容
     let data = response.data
     console.log(response)
+    ReRenderMyCart(response.data.orders)
 
   })
   .catch(function (error) {
@@ -194,76 +134,136 @@ function AddPresertData(){
 
 }
 
+function deleteAtOrderSingle(orderId){
+  console.log(`delete at ${orderId}`);
+  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${orderId}`,
+    {
+      headers: {
+        'Authorization': token
+      }
+    })
+    .then(function (response) {
+      console.log(response.data);
+      ReRenderMyCart(response.data.orders)
+      //重新渲染列表
+
+  })  
+}
 
 
+function deleteAllOrder(){
+  axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
+    {
+      headers: {
+        'Authorization': token
+      }
+    })
+    .then(function (response) {
+      console.log(response.data);
+      ReRenderMyCart(response.data.orders)
+      //重新渲染列表
 
-
-let CaegorySelectChange = document.querySelector(".productSelect")
-CaegorySelectChange.addEventListener("change",(e)=>{
-  console.log(e.target.value)
-  if(e.target.value=="全部"){
-    RenderProductData(PData)
-  }else{
-    RenderProductData(FilterProduct(e.target.value))
-  }
-})
-
-
-// let SubmitPresertOrrder = document.querySelector(".orderInfo-btn")
-// SubmitPresertOrrder.addEventListener("click",()=>{
-//   AddPresertData()
-// })
-
-
-let handleForm = document.querySelector(".orderInfo-form")
-
-handleForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  AddPresertData();
-
-  
-});
-
-
-
-
-function FilterProduct(qCategory){
-  return PData.filter((el)=>{
-    return el.category == qCategory
   })
 }
+
 
 function RenderProductData(ProductArr){
   console.log(ProductArr)
   var HTMLStr = ""
-  let list_Product = document.querySelector('.productWrap')
+  let list_Product = document.querySelector('.orderPage-table')
+  HTMLStr +=`
+      <thead>
+        <tr>
+          <th>訂單編號</th>
+          <th>聯絡人</th>
+          <th>聯絡地址</th>
+          <th>電子郵件</th>
+          <th>訂單品項</th>
+          <th>訂單日期</th>
+          <th>訂單狀態</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+  `
   ProductArr.forEach((item,index)=>{
+    // console.log(item)
+    // console.log(item.user)
+    let payState = ""
+    payState = item.paid == true ? "已處理":"未處理" 
+    payState = "未處理" 
     HTMLStr += `
-    <li class="productCard">
-                <h4 class="productType">${item.category}</h4>
-                <img src="${item.images}" alt="">
-                <a href="#javascript:;"  class="addCardBtn" onclick=AddMyCart("${item.id}") data-pid="${item.id}" >加入購物車</a>
-                <h3>${item.title}</h3>
-                <del class="originPrice">NT${item.origin_price}</del>
-                <p class="nowPrice">NT${item.price}</p>
-            </li>
+        <tr>
+          <td>${item.id}</td>
+          <td>
+            <p>${item.user.name}</p>
+            <p>${item.user.tel}</p>
+          </td>
+          <td>${item.user.address}</td>
+          <td>${item.user.email}</td>
+          <td>
+            <p>${item.products[0].title}</p>
+          </td>
+          <td>2021/03/08</td>
+          <td class="orderStatus">
+            <a href="#javascript:;" onclick=ChangePayState("${payState}","${item.id}") >
+               ${payState}
+            </a>
+          </td>
+          <td>
+            <input type="button" onclick=deleteAtOrderSingle("${item.id}") class="delSingleOrder-Btn" value="刪除">
+          </td>
+        </tr>    
     `
   })
   list_Product.innerHTML=HTMLStr
 }
 
+function ChangePayState(payState,OrderIdx){
+  let Ispaid = false
+  if(payState=="已處理"){
+    Ispaid = true
+  }
+  axios.put(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
+    {
+      "data": {
+        "id": OrderIdx,
+        "paid": Ispaid
+      }
+    },
+    {
+      headers: {
+        'Authorization': token
+      }
+    })
+    .then(function (response) {
+      console.log(response.data);
+      ReRenderMyCart(response.data.orders)
+      //ReRender List
+    })
 
-
-
-//秀空白td
-function ShowEmptyTbl(){
-  return  `
-    <tr>
-      <td colspan=5>
-          <div class="cardItem-EmptyData">
-              空資料
-          </div>
-      </td>
-    </tr>  
-  `
 }
+
+
+
+
+
+
+// C3.js
+let chart = c3.generate({
+  bindto: '#chart', // HTML 元素綁定
+  data: {
+      type: "pie",
+      columns: [
+      ['Louvre 雙人床架', 1],
+      ['Antony 雙人床架', 2],
+      ['Anty 雙人床架', 3],
+      ['其他', 4],
+      ],
+      colors:{
+          "Louvre 雙人床架":"#DACBFF",
+          "Antony 雙人床架":"#9D7FEA",
+          "Anty 雙人床架": "#5434A7",
+          "其他": "#301E5F",
+      }
+  },
+});
